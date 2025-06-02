@@ -1,6 +1,23 @@
-class ButtonEvents {
+enum class State: uint8_t {
+    IDLE,
+    PRESSED,
+    HELD,
+    RELEASE_WAIT,
+    SECOND_PRESS
+  };
+
+enum class BttnEvent: uint8_t{
+  NONE = 0,
+  CLICK,
+  DBL_CLICK,
+  HOLD
+};
+
+class ButtonController {
   private:
+
     Button &bttn;
+    State state;
     // button timing
     uint8_t dbl_click_gap;        // max ms between clicks for double clic
     uint8_t hold_time;       // ms hold period: how long to wait for press+hold
@@ -9,47 +26,58 @@ class ButtonEvents {
     unsigned long down_time = 0;    // time the button was pressed down
     unsigned long up_time = 0;      // time the button was released
 
-    // Booleans
-    bool dbl_click_waiting = false; // waiting for a souble click (down)
-    bool dbl_click_on_up = false;   // whether to register a double clic on next releas, or wait and click
-    bool snl_click_ok = true;       // whether it's ok to do a single click
-    bool ignore_up = false;         // whether to ignore the button release because click+hold was triggered
-    bool wait_up = false;           // when held, whether wait for the up event 
-    bool hold_event_past = false;   // whether or not the hold event happened already
-
   public:
-    enum BttnEvent_t {
-      None = 0,
-      Click,
-      DoubleClick,
-      Hold
-    };
-
     // Constructor
-    ButtonEvents(Button &button, uint8_t dc_gap = 250, uint8_t hold_time = 1000)
+    ButtonController(Button &button, uint8_t dc_gap = 250, uint8_t hold_time = 1500)
       : bttn(button), dbl_click_gap(dc_gap), hold_time(hold_time) {}
 
     // Update method
-    BttnEvent_t update() {
-      BttnEvent_t event = None;
-
+    BttnEvent update() {
+      // first update the button status.
       bttn.update();
+
+      BttnEvent event = BttnEvent::NONE;
       unsigned long current_time = millis();
 
-      if (bttn.wasPressed()) {
-        down_time = current_time;
-        ignore_up = false;
-        wait_up = false;
-        snl_click_ok = true;
-        hold_event_past = false;
-
-        if ((current_time - up_time) < dbl_click_gap && dbl_click_waiting) {
-          dbl_click_on_up = true;
-        } else {
-          dbl_click_on_up = false;
+      switch (state) {
+      case State::IDLE:
+        if (bttn.wasPressed()) {
+          down_time = current_time;
+          state = State::PRESSED;
         }
-
+        break;
+      case State::PRESSED:
+        if (bttn.isPressed() && (current_time - down_time >= hold_time)) {
+          event = BttnEvent::HOLD;
+          state = State::HELD;
+        }
+        else if (bttn.wasReleased()){
+          up_time = current_time;
+          state = State::RELEASE_WAIT;
+        }
+        break;
+      case State::HELD:
+        if (bttn.wasReleased()) {
+          state = State::IDLE;
+        }
+        break;
+      case State::RELEASE_WAIT:
+        if (bttn.wasPressed() && (current_time - up_time <= dbl_click_gap)) {
+          state = State::SECOND_PRESS;
+        }
+        else if (current_time - up_time > dbl_click_gap) {
+          event = BttnEvent::CLICK;
+          state = State::IDLE;
+        }
+        break;
+      case State::SECOND_PRESS:
+        if (bttn.wasReleased()) {
+          event = BttnEvent::DBL_CLICK;
+          state = State::IDLE;
+        }
+        break;
       }
+      return event;
     }
 
 };
