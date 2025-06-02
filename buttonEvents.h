@@ -19,8 +19,8 @@ class ButtonController {
     Button &bttn;
     State state;
     // button timing
-    uint8_t dbl_click_gap;        // max ms between clicks for double clic
-    uint8_t hold_time;       // ms hold period: how long to wait for press+hold
+    uint8_t dbl_click_gap;        // max ms between clicks for double click (max 255)
+    uint16_t hold_time;       // ms hold period: how long to wait for press+hold
 
     // state time tracking
     unsigned long down_time = 0;    // time the button was pressed down
@@ -28,7 +28,7 @@ class ButtonController {
 
   public:
     // Constructor
-    ButtonController(Button &button, uint8_t dc_gap = 250, uint8_t hold_time = 1500)
+    ButtonController(Button &button, uint8_t dc_gap = 255, uint16_t hold_time = 1500)
       : bttn(button), dbl_click_gap(dc_gap), hold_time(hold_time) {}
 
     // Update method
