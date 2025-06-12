@@ -1,17 +1,16 @@
 #include "button.h"
 #include "buttonEvents.h"
 
-// LED pins
-const uint8_t ledR_pin = 0;
-const uint8_t ledG_pin = 4;
-const uint8_t ledB_pin = 3;
+//<--  IMPORTANT -->
+// To use UART on the attiny402
+// Make sure to plug the correct pins
+// according to USART0
+// or switch to USART1 before Serial.begin() is called
+
 // Input buttons pins
-const uint8_t bttn0_pin = 1;
+const uint8_t bttn0_pin = 3;
 const uint8_t bttn1_pin = 2;
-// Initial LED values
-uint8_t ledR_val = LOW;
-uint8_t ledG_val = LOW;
-uint8_t ledB_val = LOW;
+
 // Button debounced handles and event controller
 Button btn0(bttn0_pin);
 Button btn1(bttn1_pin);
@@ -19,14 +18,7 @@ ButtonController ev_btn(btn1);
 
 void setup() {
   // initialize the LED pins as an output:
-  pinMode(ledR_pin, OUTPUT);
-  pinMode(ledG_pin, OUTPUT);
-  pinMode(ledB_pin, OUTPUT);
-
-  // set initial LED state
-  digitalWrite(ledR_pin, ledR_val);
-  digitalWrite(ledG_pin, ledG_val);
-  digitalWrite(ledB_pin, ledB_val);
+  Serial.begin(9600);
 }
 
 void loop() {
@@ -52,17 +44,14 @@ void loop() {
 
 // Events to trigger
 void clickEvent() {
-  toggleLED(ledR_pin, ledR_val);
+  Serial.println("AT+SCAN");
+  delay(1000);
 }
 void doubleClickEvent() {
-  toggleLED(ledG_pin, ledG_val);
+  Serial.println("AT+RESET");
+  delay(1000);
 }
 void holdEvent() {
-  toggleLED(ledB_pin, ledB_val);
-}
-
-// Utility functions
-void toggleLED(const uint8_t &pin, uint8_t &val) {
-  val = !val;
-  digitalWrite(pin, val);
+  Serial.println("AT+POWER_OFF");
+  delay(1000);
 }
