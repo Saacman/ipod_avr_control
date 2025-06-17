@@ -4,5 +4,6 @@ The initial plan was to use `UART` to control the `KCX BT module`. But this has 
 - Power Usage: Clock frequency needs to be at least `5MHz` to use achieve 9600 baud.
 - Reliability: The serial interface of the BT Module is very unreliable.
 - Complexity: It would be needed to track the states of the BT module with internal variables. A mismatch would be hard to debug in a permanent solution.
+- Memory Usage: using the serial methods increases the memory usage by a lot. A lighter implementation would be needed, possibly introducing more possible errors/
 
 I could revisit this option later.
