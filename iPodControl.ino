@@ -1,39 +1,42 @@
 #include "button.h"
 #include "buttonEvents.h"
 
-// LED pins
-const uint8_t ledR_pin = 0;
-const uint8_t ledG_pin = 4;
-const uint8_t ledB_pin = 3;
+// MOSFET Gate pin
+const uint8_t gate_pin = 0;
 // Input buttons pins
-const uint8_t bttn0_pin = 1;
+const uint8_t bttn0_pin = 3;
 const uint8_t bttn1_pin = 2;
-// Initial LED values
-uint8_t ledR_val = LOW;
-uint8_t ledG_val = LOW;
-uint8_t ledB_val = LOW;
+
+// Initial Gate value
+uint8_t gate_val = LOW;
+
 // Button debounced handles and event controller
-Button btn0(bttn0_pin);
-Button btn1(bttn1_pin);
+Button btn0(bttn0_pin); // enable button
+Button btn1(bttn1_pin); // Event trigger button
 ButtonController ev_btn(btn1);
+// bool enable = false;
 
 void setup() {
-  // initialize the LED pins as an output:
-  pinMode(ledR_pin, OUTPUT);
-  pinMode(ledG_pin, OUTPUT);
-  pinMode(ledB_pin, OUTPUT);
+  // initialize the Gate pin as an output:
+  pinMode(gate_pin, OUTPUT);
 
   // set initial LED state
-  digitalWrite(ledR_pin, ledR_val);
-  digitalWrite(ledG_pin, ledG_val);
-  digitalWrite(ledB_pin, ledB_val);
+  digitalWrite(gate_pin, gate_val);
 }
 
 void loop() {
+  // Update buttons. Avoid halting the FSM
   btn0.update();
-  // Use btn0 as blocking button
+  ev_btn.update();
+
+  if (btn0.wasReleased() || btn0.wasPressed()) {
+    // Cancel event sequence if the enable button was released or
+    // Clear previous state if the enable button was just pressed (ignore previous events)
+    ev_btn.reset();
+  }
+
   if (btn0.isPressed()) {
-    switch (ev_btn.update()) {
+    switch (ev_btn.getEvent()) {
       case BttnEvent::CLICK:
         clickEvent();
         break;
@@ -52,13 +55,28 @@ void loop() {
 
 // Events to trigger
 void clickEvent() {
-  toggleLED(ledR_pin, ledR_val);
+  // Don't do annything
+  return;
 }
 void doubleClickEvent() {
-  toggleLED(ledG_pin, ledG_val);
+  toggleLED(gate_pin, gate_val);
+  delay(100);
+  toggleLED(gate_pin, gate_val);
+  delay(100);
 }
 void holdEvent() {
-  toggleLED(ledB_pin, ledB_val);
+  toggleLED(gate_pin, gate_val);
+  delay(100);
+  toggleLED(gate_pin, gate_val);
+  delay(100);
+  toggleLED(gate_pin, gate_val);
+  delay(100);
+  toggleLED(gate_pin, gate_val);
+  delay(100);
+  toggleLED(gate_pin, gate_val);
+  delay(100);
+  toggleLED(gate_pin, gate_val);
+  delay(100);
 }
 
 // Utility functions
