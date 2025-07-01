@@ -11,9 +11,10 @@ const uint8_t bttn0_pin = 1;
 const uint8_t bttn1_pin = 2;
 // Interrupt pin
 const uint8_t isr_pin = 3;
+const uint8_t scan_pin = 4;
 // Wake flag
 volatile bool wake_flag = false;
-// Initial Gate value
+// Initial Gate value (N-MOSFET)
 uint8_t gate_val = LOW;
 // Button debounced handles and event controller
 Button btn0(bttn0_pin); // enable button
@@ -28,6 +29,9 @@ void setup() {
   // Set up wake up interrupt
   pinMode(isr_pin, INPUT);
   attachInterrupt(digitalPinToInterrupt(isr_pin), wakeISR, RISING);
+
+  //Initialize the scan pin
+  pinMode(scan_pin, INPUT);  // High-Z (released)
 
   // Set up sleep
   set_sleep_mode(SLEEP_MODE_PWR_DOWN);  /* Set sleep mode to POWER DOWN mode */
@@ -86,21 +90,15 @@ void main_control(){
 void clickEvent() {
   return;
 }
+
 void doubleClickEvent() {
-  // Press scan button
-  toggleLED(gate_pin, gate_val);
-  delay(100);
-  toggleLED(gate_pin, gate_val);
-  delay(100);
-  toggleLED(gate_pin, gate_val);
-  delay(100);
-  toggleLED(gate_pin, gate_val);
-  delay(100);
-  toggleLED(gate_pin, gate_val);
-  delay(100);
-  toggleLED(gate_pin, gate_val);
-  delay(100);
+  // Simulate press scan button using open-drain
+  pinMode(scan_pin, OUTPUT);
+  digitalWrite(scan_pin, LOW);  // "Press" the button (pull line low)
+  delay(1100);                    // Hold for 100 ms
+  pinMode(scan_pin, INPUT);     // "Release" the button (go high-Z)
 }
+
 void holdEvent() {
   // Toggle bt on/off
   toggleLED(gate_pin, gate_val);
