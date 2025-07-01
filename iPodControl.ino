@@ -14,7 +14,7 @@ const uint8_t isr_pin = 3;
 const uint8_t scan_pin = 4;
 // Wake flag
 volatile bool wake_flag = false;
-// Initial Gate value (N-MOSFET)
+// Initial Gate value (N-MOSFET) TODO: Change to P-MOSFET
 uint8_t gate_val = LOW;
 // Button debounced handles and event controller
 Button btn0(bttn0_pin); // enable button

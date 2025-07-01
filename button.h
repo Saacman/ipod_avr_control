@@ -23,7 +23,7 @@ class Button
     Button(uint8_t pin, uint8_t delay = 20):
       buttonPin(pin),
       debounceDelay(delay) {
-        pinMode(buttonPin, INPUT); // Using external pull-up
+        pinMode(buttonPin, INPUT_PULLUP); // Using internal pull-up
       }
 
     bool update() {
