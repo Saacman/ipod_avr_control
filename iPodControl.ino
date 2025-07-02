@@ -4,58 +4,67 @@
 #include "button.h"
 #include "buttonEvents.h"
 
-// MOSFET Gate pin
-const uint8_t gate_pin = 0;
-// Input buttons pins
-const uint8_t bttn0_pin = 1;
-const uint8_t bttn1_pin = 2;
-// Interrupt pin
-const uint8_t hold_switch_pin = 3;
-const uint8_t scan_pin = 4;
-// Wake flag
+// Pins
+const uint8_t gate_pin = 1;
+const uint8_t bttn0_pin = 0; // Enable button
+const uint8_t bttn1_pin = 2; // Even trigger button
+const uint8_t hold_switch_pin = 3; // iPod hold Switch
+const uint8_t scan_pin = 4; // Output open-drain "button"
+
+// Wake flags
 volatile bool wake_flag = false;
+volatile bool bttn0_wake_flag = false;
+
 // Initial Gate value (N-MOSFET) TODO: Change to P-MOSFET
 uint8_t gate_val = LOW;
-// Button debounced handles and event controller
+
+// Button instances
 Button btn0(bttn0_pin); // enable button
 Button btn1(bttn1_pin); // Event trigger button
 ButtonController ev_btn(btn1);
 
 void setup() {
-  // initialize the Gate pin as an output & intialize
+  // initialize the Gate pin
   pinMode(gate_pin, OUTPUT);
   digitalWrite(gate_pin, gate_val);
 
-  // Set up wake up interrupt
+  // Set up hold switch input & interrupt
   pinMode(hold_switch_pin, INPUT);
-  attachInterrupt(digitalPinToInterrupt(hold_switch_pin), wakeISR, RISING);
+  attachInterrupt(digitalPinToInterrupt(hold_switch_pin), holdSwitchISR, RISING);
+  
+  // Wake interrupt from enable button
+  attachInterrupt(digitalPinToInterrupt(bttn0_pin), bttn0WakeISR, FALLING);
 
-  //Initialize the scan pin
+  //Initialize the scan pin (oepn-drain)
   pinMode(scan_pin, INPUT);  // High-Z (released)
-
+ 
   // Set up sleep
-  set_sleep_mode(SLEEP_MODE_PWR_DOWN);  /* Set sleep mode to POWER DOWN mode */
   sleep_enable();
-  // Enable global interrupts
-  sei();
+  sei();  // Enable global interrupts
 }
-void wakeISR(){
+
+void holdSwitchISR(){
   wake_flag = true;
+}
+
+void bttn0WakeISR(){
+  bttn0_wake_flag = true;
 }
 
 void loop() {
   // clear flags
-  if(wake_flag) {
+  if(wake_flag || bttn0_wake_flag) {
     wake_flag = false;
+    bttn0_wake_flag = false;
   }
 
   main_control();
 
   // Prepare for sleep
   if(!wake_flag && !digitalRead(hold_switch_pin)){
-    btn0.disable();
-    btn1.disable();
-    sleep_cpu();
+    deepSleep();
+  } else if (!bttn0_wake_flag && !btn0.isPressed()) {
+    lightSleep();
   }
 }
 
@@ -90,6 +99,7 @@ void main_control(){
 
 // Events to trigger
 void clickEvent() {
+  // NOT USED
   return;
 }
 
@@ -118,4 +128,25 @@ void holdEvent() {
 void togglePIN(const uint8_t &pin, uint8_t &val) {
   val = !val;
   digitalWrite(pin, val);
+}
+
+void deepSleep() {
+  // Full power down — disable all button pullups
+  btn0.disable();  // safe: will wake via interrupt
+  btn1.disable();
+
+  set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+  sleep_enable();
+  sleep_cpu();
+  sleep_disable();
+}
+
+void lightSleep() {
+  // Allow fast wake up
+  btn1.disable();  // not needed during sleep
+
+  set_sleep_mode(SLEEP_MODE_STANDBY);
+  sleep_enable();
+  sleep_cpu();
+  sleep_disable();
 }
