@@ -4,7 +4,7 @@
 #include "Arduino.h"
 
 class Button
-// Handle button debounce using pull-up configuration
+// Handle button debounce and states
 {
   private:
     uint8_t buttonPin;               // the number of the LED pin 0, 3, 4
@@ -72,14 +72,20 @@ class Button
       return buttonChanged && buttonState == HIGH; // Low -> High
     }
     void enable() {
-      pinMode(buttonPin, INPUT_PULLUP);
-      disabled = false;
-      delay(10); // is this necessary?
+      if(disabled) {
+        pinMode(buttonPin, INPUT_PULLUP);
+        disabled = false;
+        lastButtonState = digitalRead(buttonPin);
+        buttonState = lastButtonState;
+      }
     }
+
     void disable() {
-      pinMode(buttonPin, OUTPUT);
-      digitalWrite(buttonPin, LOW);
-      disabled = true;
+      if(!disabled){
+        pinMode(buttonPin, OUTPUT);
+        digitalWrite(buttonPin, LOW);
+        disabled = true;
+      }
     }
 
 };
