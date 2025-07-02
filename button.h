@@ -13,6 +13,7 @@ class Button
     uint8_t buttonState = HIGH;       // the current reading from the input pin
     uint8_t lastButtonState = HIGH;  // the previous reading from the input pin (pull-up)
     bool buttonChanged = false;
+    bool disabled = false;
 
     // time measured in milliseconds, will quickly become a bigger number than can be stored in an int.
     unsigned long lastDebounceTime = 0;  // the last time the output pin was toggled
@@ -27,6 +28,10 @@ class Button
       }
 
     bool update() {
+      if (disabled) {
+        enable();
+        return false;
+      }
       // read the state of the button
       uint8_t reading = digitalRead(buttonPin);
 
@@ -65,6 +70,16 @@ class Button
 
     bool wasReleased() const {
       return buttonChanged && buttonState == HIGH; // Low -> High
+    }
+    void enable() {
+      pinMode(buttonPin, INPUT_PULLUP);
+      disabled = false;
+      delay(10); // is this necessary?
+    }
+    void disable() {
+      pinMode(buttonPin, OUTPUT);
+      digitalWrite(buttonPin, LOW);
+      disabled = true;
     }
 
 };

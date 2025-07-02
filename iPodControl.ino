@@ -10,7 +10,7 @@ const uint8_t gate_pin = 0;
 const uint8_t bttn0_pin = 1;
 const uint8_t bttn1_pin = 2;
 // Interrupt pin
-const uint8_t isr_pin = 3;
+const uint8_t hold_switch_pin = 3;
 const uint8_t scan_pin = 4;
 // Wake flag
 volatile bool wake_flag = false;
@@ -27,8 +27,8 @@ void setup() {
   digitalWrite(gate_pin, gate_val);
 
   // Set up wake up interrupt
-  pinMode(isr_pin, INPUT);
-  attachInterrupt(digitalPinToInterrupt(isr_pin), wakeISR, RISING);
+  pinMode(hold_switch_pin, INPUT);
+  attachInterrupt(digitalPinToInterrupt(hold_switch_pin), wakeISR, RISING);
 
   //Initialize the scan pin
   pinMode(scan_pin, INPUT);  // High-Z (released)
@@ -44,7 +44,7 @@ void wakeISR(){
 }
 
 void loop() {
-
+  // clear flags
   if(wake_flag) {
     wake_flag = false;
   }
@@ -52,7 +52,9 @@ void loop() {
   main_control();
 
   // Prepare for sleep
-  if(!wake_flag && !digitalRead(isr_pin)){
+  if(!wake_flag && !digitalRead(hold_switch_pin)){
+    btn0.disable();
+    btn1.disable();
     sleep_cpu();
   }
 }
@@ -93,19 +95,27 @@ void clickEvent() {
 
 void doubleClickEvent() {
   // Simulate press scan button using open-drain
-  pinMode(scan_pin, OUTPUT);
-  digitalWrite(scan_pin, LOW);  // "Press" the button (pull line low)
-  delay(1100);                    // Hold for 100 ms
-  pinMode(scan_pin, INPUT);     // "Release" the button (go high-Z)
+//   pinMode(scan_pin, OUTPUT);
+//   digitalWrite(scan_pin, LOW);  // "Press" the button (pull line low)
+//   delay(1100);                    // Hold for 100 ms
+//   pinMode(scan_pin, INPUT);     // "Release" the button (go high-Z)
+  togglePIN(gate_pin, gate_val);
+  delay(100);
+  togglePIN(gate_pin, gate_val);
+  delay(100);
+  togglePIN(gate_pin, gate_val);
+  delay(100);
+  togglePIN(gate_pin, gate_val);
+  delay(100);
 }
 
 void holdEvent() {
   // Toggle bt on/off
-  toggleLED(gate_pin, gate_val);
+  togglePIN(gate_pin, gate_val);
 }
 
 // Utility functions
-void toggleLED(const uint8_t &pin, uint8_t &val) {
+void togglePIN(const uint8_t &pin, uint8_t &val) {
   val = !val;
   digitalWrite(pin, val);
 }
