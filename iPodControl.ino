@@ -88,18 +88,18 @@ void main_control(){
 
 void doubleClickEvent() {
   // Simulate press scan button using open-drain
-//   pinMode(scan_pin, OUTPUT);
-//   digitalWrite(scan_pin, LOW);  // "Press" the button (pull line low)
-//   delay(1100);                    // Hold for 100 ms
-//   pinMode(scan_pin, INPUT);     // "Release" the button (go high-Z)
-  togglePIN(gate_pin, gate_val);
-  delay(100);
-  togglePIN(gate_pin, gate_val);
-  delay(100);
-  togglePIN(gate_pin, gate_val);
-  delay(100);
-  togglePIN(gate_pin, gate_val);
-  delay(100);
+  pinMode(scan_pin, OUTPUT);
+  digitalWrite(scan_pin, LOW);  // "Press" the button (pull line low)
+  delay(1100);                    // Hold for 100 ms
+  pinMode(scan_pin, INPUT);     // "Release" the button (go high-Z)
+
+  // Debug
+  // for(uint8_t i = 0; i < 4; i++) {
+  //   togglePIN(gate_pin, gate_val);
+  //   delay(100);
+  //   togglePIN(gate_pin, gate_val);
+  //   delay(100);
+  // }
 }
 
 void holdEvent() {

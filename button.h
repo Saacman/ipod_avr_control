@@ -71,6 +71,7 @@ class Button
     bool wasReleased() const {
       return buttonChanged && buttonState == HIGH; // Low -> High
     }
+
     void enable() {
       if(disabled){
         pinMode(buttonPin, INPUT_PULLUP);
@@ -85,7 +86,6 @@ class Button
         disabled = true;
       }
     }
-
 };
 
 #endif
