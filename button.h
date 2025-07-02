@@ -72,14 +72,18 @@ class Button
       return buttonChanged && buttonState == HIGH; // Low -> High
     }
     void enable() {
-      pinMode(buttonPin, INPUT_PULLUP);
-      disabled = false;
-      delay(10); // is this necessary?
+      if(disabled){
+        pinMode(buttonPin, INPUT_PULLUP);
+        disabled = false;
+      }
     }
+
     void disable() {
-      pinMode(buttonPin, OUTPUT);
-      digitalWrite(buttonPin, LOW);
-      disabled = true;
+      if (!disabled) {
+        pinMode(buttonPin, OUTPUT);
+        digitalWrite(buttonPin, LOW);
+        disabled = true;
+      }
     }
 
 };
