@@ -5,17 +5,17 @@
 #include "buttonEvents.h"
 
 // Pins
-const uint8_t gate_pin = 0;        // MOSFET Gate control pin
+const uint8_t scan_pin = 0;        // Output open-drain "button"
 const uint8_t bttn0_pin = 1;       // Enable button
 const uint8_t bttn1_pin = 2;       // Event trigger button
 const uint8_t hold_switch_pin = 3; // iPod hold switch
-const uint8_t scan_pin = 4;        // Output open-drain "button"
+const uint8_t gate_pin = 4;        // MOSFET Gate control pin
 
 // Wake flag
 volatile bool wake_flag = false;
 
-// Initial Gate value (N-MOSFET) TODO: Change to P-MOSFET
-uint8_t gate_val = LOW;
+// Initial Gate value
+uint8_t gate_val = HIGH; // (P-MOSFET)
 
 // Button instances
 Button btn0(bttn0_pin); // Enable button
@@ -92,14 +92,6 @@ void doubleClickEvent() {
   digitalWrite(scan_pin, LOW);  // "Press" the button (pull line low)
   delay(1100);                    // Hold for 100 ms
   pinMode(scan_pin, INPUT);     // "Release" the button (go high-Z)
-
-  // Debug
-  // for(uint8_t i = 0; i < 4; i++) {
-  //   togglePIN(gate_pin, gate_val);
-  //   delay(100);
-  //   togglePIN(gate_pin, gate_val);
-  //   delay(100);
-  // }
 }
 
 void holdEvent() {
