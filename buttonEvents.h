@@ -17,10 +17,12 @@ class ButtonController {
   private:
 
     Button &bttn;
-    State state;
+    State state = State::IDLE;
+    BttnEvent lastEvent = BttnEvent::NONE; // Store detected event
+
     // button timing
     uint8_t dbl_click_gap;        // max ms between clicks for double click (max 255)
-    uint16_t hold_time;       // ms hold period: how long to wait for press+hold
+    uint16_t hold_period;       // ms hold period: how long to wait for press+hold
 
     // state time tracking
     unsigned long down_time = 0;    // time the button was pressed down
@@ -28,16 +30,15 @@ class ButtonController {
 
   public:
     // Constructor
-    ButtonController(Button &button, uint8_t dc_gap = 255, uint16_t hold_time = 1500)
-      : bttn(button), dbl_click_gap(dc_gap), hold_time(hold_time) {}
+    ButtonController(Button &button, uint8_t dc_gap = 255, uint16_t hold_period = 1500)
+      : bttn(button), dbl_click_gap(dc_gap), hold_period(hold_period) {}
 
     // Update method
-    BttnEvent update() {
+    void update() {
       // first update the button status.
       bttn.update();
-
-      BttnEvent event = BttnEvent::NONE;
       unsigned long current_time = millis();
+      BttnEvent event = BttnEvent::NONE;
 
       switch (state) {
       case State::IDLE:
@@ -47,7 +48,7 @@ class ButtonController {
         }
         break;
       case State::PRESSED:
-        if (bttn.isPressed() && (current_time - down_time >= hold_time)) {
+        if (bttn.isPressed() && (current_time - down_time >= hold_period)) {
           event = BttnEvent::HOLD;
           state = State::HELD;
         }
@@ -58,7 +59,7 @@ class ButtonController {
         break;
       case State::HELD:
         if (bttn.wasReleased()) {
-          state = State::IDLE;
+          state = State::IDLE; // Reset after hold release
         }
         break;
       case State::RELEASE_WAIT:
@@ -67,17 +68,31 @@ class ButtonController {
         }
         else if (current_time - up_time > dbl_click_gap) {
           event = BttnEvent::CLICK;
-          state = State::IDLE;
+          state = State::IDLE; // Reset after single click
         }
         break;
       case State::SECOND_PRESS:
         if (bttn.wasReleased()) {
           event = BttnEvent::DBL_CLICK;
-          state = State::IDLE;
+          state = State::IDLE; // Reset after double click
         }
         break;
       }
+      // Store detected event
+      if(event != BttnEvent::NONE){
+        lastEvent = event;
+      }
+    }
+
+    BttnEvent getEvent() {
+      BttnEvent event = lastEvent;
+      lastEvent = BttnEvent::NONE; // Clear event after fetching
       return event;
+    }
+
+    void reset() {
+      state = State::IDLE;
+      lastEvent = BttnEvent::NONE;
     }
 
 };
